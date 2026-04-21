@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Ruota delle Scale - Quiz</title>
+
+<!-- PWA -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#4CAF50">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>La Ruota delle Scale – Quiz</h1>
+
+<button id="openSettings">Impostazioni ⚙️</button>
+<button id="newExercise">Nuovo esercizio</button>
+<button id="startGame">Modalità Game 🎮</button>
+<button id="openTraining">Modalità Allenamento 🎯</button>
+<button id="openClassMode">Modalità Classe 🧑‍🏫</button>
+<button id="toggleTheme">Tema chiaro/scuro 🌓</button>
+
+<div id="scoreboard">
+  <span>Punteggio: <strong id="score">0</strong></span>
+  <span>Livello: <strong id="level">1</strong></span>
+  <span>Tempo: <strong id="timer">--</strong></span>
+  <span>Studente:
+    <select id="currentStudentSelect">
+      <option value="">(singolo giocatore)</option>
+    </select>
+  </span>
+</div>
+
+<!-- PANNELLO IMPOSTAZIONI -->
+<div id="settingsPanel">
+  <h2>Impostazioni</h2>
+
+  <h3>Modalità di gioco</h3>
+  <label><input type="radio" name="mode" value="A" checked> A — Progressione automatica</label><br>
+  <label><input type="radio" name="mode" value="B"> B — Scelta manuale del livello</label>
+
+  <h3>Tempo per esercizio</h3>
+  <input type="number" id="timeInput" min="0" max="300" value="30">
+
+  <h3>Punteggi</h3>
+  <label>Punteggio risposta corretta:</label>
+  <input type="number" id="scoreCorrect" value="10"><br>
+
+  <label>Bonus risposta veloce:</label>
+  <input type="number" id="scoreFast" value="5"><br>
+
+  <label>Penalità risposta errata:</label>
+  <input type="number" id="scoreWrong" value="-5"><br>
+
+  <label>Penalità tempo scaduto:</label>
+  <input type="number" id="scoreTimeout" value="-10"><br>
+
+  <div id="manualLevelBox">
+    <h3>Livello (solo modalità B)</h3>
+    <select id="manualLevel">
+      <option value="1">1 — Scale facili</option>
+      <option value="2">2 — Misto completo</option>
+      <option value="3">3 — Intervallo mancante</option>
+    </select>
+  </div>
+
+  <h3>Modalità Game</h3>
+  <label>Numero esercizi:</label>
+  <input type="number" id="gameCount" min="1" max="100" value="10">
+
+  <button id="saveSettings">Salva impostazioni</button>
+  <button id="closeSettings">Chiudi</button>
+</div>
+
+<div id="overlay"></div>
+
+<!-- PANNELLO RISULTATI -->
+<div id="gameResultsPanel">
+  <h2 id="resultsTitle">Risultati</h2>
+  <div id="gameResultsContent"></div>
+
+  <button id="downloadExcel">Scarica Excel (giocatore)</button>
+  <button id="downloadClassExcel">Scarica registro classe</button>
+  <button id="closeResults">Chiudi</button>
+</div>
+
+<div id="resultsOverlay"></div>
+
+<!-- PANNELLO ALLENAMENTO -->
+<div id="trainingPanel">
+  <h2>Modalità Allenamento</h2>
+
+  <label>Tonalità:</label>
+  <select id="trainingTonic"></select>
+
+  <label>Modo:</label>
+  <select id="trainingMode">
+    <option value="major">Maggiore</option>
+    <option value="minorNat">Minore naturale</option>
+  </select>
+
+  <button id="startTrainingExercise">Avvia esercizio</button>
+  <button id="closeTraining">Chiudi</button>
+</div>
+
+<div id="trainingOverlay"></div>
+
+<!-- PANNELLO CLASSE -->
+<div id="classPanel">
+  <h2>Modalità Classe</h2>
+  <p>Inserisci un nome per riga:</p>
+  <textarea id="classStudentsInput" rows="8" style="width:100%; font-size:18px;"></textarea>
+  <button id="saveClassStudents">Salva elenco studenti</button>
+  <button id="closeClassPanel">Chiudi</button>
+</div>
+
+<div id="classOverlay"></div>
+
+<!-- CERCHIO SCALE -->
+<div id="circle-container"></div>
+
+<h2>Trascina le note:</h2>
+<div id="notes"></div>
+
+<button id="check">Verifica</button>
+
+<p id="result"></p>
+
+<h2>Distanza reale tra note consecutive:</h2>
+<p id="intervals"></p>
+
+<h2>Struttura astratta della scala:</h2>
+<p id="abstract"></p>
+
+<!-- Suono nota -->
+<audio id="noteSound" src="note-click.mp3" preload="auto"></audio>
+
+<script src="script.js"></script>
+
+<!-- Registrazione service worker -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js');
+  });
+}
+</script>
+
+</body>
+</html>
