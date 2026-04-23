@@ -1,290 +1,132 @@
-/* ============================
-   STILE BASE
-============================ */
+/* RESET BASE */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
 
 body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  padding: 20px;
-  font-size: 22px;
-  background: #ffffff;
-  color: #000000;
-  transition: background 0.3s, color 0.3s;
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+    color: #222;
+    padding: 20px;
+    text-align: center;
 }
 
-button {
-  padding: 15px 30px;
-  font-size: 22px;
-  margin: 10px;
-  border-radius: 15px;
-  border: none;
-  background: #4CAF50;
-  color: white;
-  cursor: pointer;
+/* TITOLO */
+.title {
+    font-size: 2rem;
+    margin-bottom: 20px;
 }
 
-button:hover {
-  background: #45a049;
+/* RUOTA */
+#wheel-container {
+    width: 320px;
+    height: 320px;
+    margin: 0 auto 20px auto;
+    position: relative;
 }
 
-#scoreboard {
-  margin: 20px;
-  font-size: 24px;
+#wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 4px solid #1abc9c;
+    position: relative;
 }
 
-/* ============================
-   TEMA SCURO
-============================ */
-
-body.dark-theme {
-  background: #111;
-  color: #f5f5f5;
+/* NOTE SULLA RUOTA */
+.wheel-note {
+    width: 50px;
+    height: 50px;
+    background: white;
+    border: 2px solid #1abc9c;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    font-weight: bold;
+    cursor: grab;
 }
 
-body.dark-theme button {
-  background: #388e3c;
-}
-
-body.dark-theme #settingsPanel,
-body.dark-theme #gameResultsPanel,
-body.dark-theme #trainingPanel,
-body.dark-theme #classPanel {
-  background: #222;
-  color: #f5f5f5;
-}
-
-body.dark-theme .slot {
-  border-color: #f5f5f5;
-}
-
-/* ============================
-   PANNELLO IMPOSTAZIONI
-============================ */
-
-#settingsPanel {
-  position: fixed;
-  top: 0;
-  right: -400px;
-  width: 350px;
-  height: 100%;
-  background: white;
-  border-left: 4px solid black;
-  padding: 20px;
-  transition: right 0.4s ease;
-  z-index: 1001;
-  overflow-y: auto;
-}
-
-#settingsPanel.open {
-  right: 0;
-}
-
-#overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1000;
-}
-
-/* ============================
-   PANNELLO RISULTATI
-============================ */
-
-#gameResultsPanel {
-  position: fixed;
-  top: 0;
-  right: -500px;
-  width: 450px;
-  height: 100%;
-  background: white;
-  border-left: 4px solid black;
-  padding: 20px;
-  transition: right 0.4s ease;
-  z-index: 1002;
-  overflow-y: auto;
-}
-
-#gameResultsPanel.open {
-  right: 0;
-}
-
-#resultsOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1001;
-}
-
-.resultBox {
-  border: 3px solid black;
-  padding: 10px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-}
-
-.resultBox.correct {
-  background: #c8f7c5;
-}
-
-.resultBox.wrong {
-  background: #f7c5c5;
-}
-
-/* ============================
-   PANNELLO ALLENAMENTO
-============================ */
-
-#trainingPanel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 350px;
-  transform: translate(-50%, -50%);
-  background: white;
-  border: 4px solid black;
-  border-radius: 15px;
-  padding: 20px;
-  z-index: 1003;
-  display: none;
-}
-
-#trainingPanel label {
-  display: block;
-  margin-top: 10px;
-}
-
-#trainingPanel select {
-  width: 100%;
-  font-size: 18px;
-  padding: 5px;
-  margin-top: 5px;
-}
-
-#trainingOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1002;
-}
-
-/* ============================
-   PANNELLO CLASSE
-============================ */
-
-#classPanel {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 400px;
-  transform: translate(-50%, -50%);
-  background: white;
-  border: 4px solid black;
-  border-radius: 15px;
-  padding: 20px;
-  z-index: 1003;
-  display: none;
-}
-
-#classPanel textarea {
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 18px;
-}
-
-#classOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  display: none;
-  z-index: 1002;
-}
-
-/* ============================
-   CERCHIO SCALE
-============================ */
-
-#circle-container {
-  position: relative;
-  width: 550px;
-  height: 550px;
-  margin: auto;
-}
-
-.slot {
-  width: 120px;
-  height: 120px;
-  border: 4px solid black;
-  border-radius: 50%;
-  position: absolute;
-  background: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 26px;
-  transition: background 0.2s;
+/* BANCA NOTE */
+#note-bank {
+    margin-top: 25px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .note {
-  display: inline-block;
-  padding: 20px 30px;
-  margin: 10px;
-  background: #87CEFA;
-  border-radius: 15px;
-  cursor: grab;
-  font-size: 26px;
-  user-select: none;
+    width: 55px;
+    height: 55px;
+    background: #fff;
+    border: 2px solid #444;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    cursor: grab;
 }
 
-.note:active {
-  cursor: grabbing;
+/* SLOT SULLA RUOTA */
+.slot {
+    width: 55px;
+    height: 55px;
+    border: 2px dashed #aaa;
+    border-radius: 8px;
+    position: absolute;
 }
 
-.fixed-note {
-  background: #ddd;
-  cursor: default;
+/* CONTROLLI */
+#controls {
+    margin: 25px 0;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
 }
 
-.slot.correct {
-  background: #90EE90;
+button {
+    padding: 10px 18px;
+    border: none;
+    background: #1abc9c;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
-.slot.wrong {
-  background: #FF7F7F;
+button:hover {
+    background: #17a589;
 }
 
-/* ============================
-   RESPONSIVE
-============================ */
+/* RISULTATI */
+#results {
+    margin-top: 20px;
+}
 
-@media (max-width: 700px) {
-  #circle-container {
-    width: 350px;
-    height: 350px;
-  }
+#results p {
+    margin: 8px 0;
+    font-size: 1.1rem;
+}
 
-  .slot {
-    width: 80px;
-    height: 80px;
-    font-size: 18px;
-  }
-
-  .note {
-    padding: 10px 15px;
-    font-size: 20px;
-  }
+/* RESPONSIVE */
+@media (min-width: 900px) {
+    #wheel-container {
+        width: 420px;
+        height: 420px;
+    }
+    .wheel-note, .slot {
+        width: 65px;
+        height: 65px;
+    }
+    .note {
+        width: 65px;
+        height: 65px;
+    }
 }

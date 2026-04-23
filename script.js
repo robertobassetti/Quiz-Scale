@@ -2,54 +2,56 @@
 // CONFIGURAZIONE BASE
 // ======================
 
-// Note cromatiche
 const semitones = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
 
-// Pattern scale (solo maggiori e minori naturali)
 const patterns = {
   major:    [2,2,1,2,2,2,1],
   minorNat: [2,1,2,2,1,2,2]
 };
 
-// Scale “facili”
 const majorEasyTonics = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
 const minorEasyTonics = ["La", "Si", "Do#", "Re", "Mi", "Fa#", "Sol#"];
 
-// Stato del gioco
 let gameState = {
-  mode: "A",              // "A" = progressione automatica, "B" = scelta manuale
-  currentLevel: 1,        // livello attuale (1–3)
-  manualLevel: 1,         // livello scelto in modalità B
-  timePerExercise: 30,    // secondi
+  mode: "A",
+  currentLevel: 1,
+  manualLevel: 1,
+  timePerExercise: 30,
   score: 0,
-  correctInLevel: 0,      // risposte corrette nel livello corrente (per progressione)
+  correctInLevel: 0,
   scoreCorrect: 10,
   scoreFast: 5,
   scoreWrong: -5,
   scoreTimeout: -10,
-  gameMode: false,        // modalità Game attiva?
-  gameRemaining: 0,       // esercizi rimanenti
-  gameTotal: 0,           // totale esercizi
-  gameCorrect: 0,         // risposte corrette in modalità Game
-  playerName: "",         // nome giocatore modalità Game
-  trainingMode: false     // modalità Allenamento attiva?
+  gameMode: false,
+  gameRemaining: 0,
+  gameTotal: 0,
+  gameCorrect: 0,
+  playerName: "",
+  trainingMode: false
 };
 
-// Modalità classe
 let classModeEnabled = false;
 let classStudents = [];
-let classRegister = []; // registro globale di tutti gli esercizi (classe)
+let classRegister = [];
 
-let correctScale = [];     // scala corretta per l’esercizio corrente
+let correctScale = [];
 let timerId = null;
 let remainingTime = null;
 let exerciseActive = false;
 
-// Tema
-let currentTheme = 'light';
-
-// Archivio esercizi modalità Game
 let gameHistory = [];
+let dragged = null;
+
+// ======================
+// RILEVAMENTO DISPOSITIVO
+// ======================
+
+function detectDevice() {
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  document.body.classList.add(isTouch ? "touch-device" : "mouse-device");
+}
+detectDevice();
 
 // ======================
 // UTILITY SCALE
@@ -70,7 +72,7 @@ function buildScale(tonic, type) {
 }
 
 // ======================
-// UI BASE
+// UI RIFERIMENTI
 // ======================
 
 const container = document.getElementById("circle-container");
@@ -111,7 +113,7 @@ const closeClassPanelBtn = document.getElementById("closeClassPanel");
 const currentStudentSelect = document.getElementById("currentStudentSelect");
 
 // ======================
-// CERCHI E NOTE
+// CERCHIO E NOTE
 // ======================
 
 const numSlots = 7;
@@ -148,8 +150,6 @@ function createNotes() {
   enableDrag();
 }
 
-let dragged = null;
-
 function playNoteSound() {
   if (!noteSound) return;
   try {
@@ -158,10 +158,24 @@ function playNoteSound() {
   } catch (e) {}
 }
 
+// ======================
+// DRAG & DROP MIGLIORATO
+// ======================
+
 function enableDrag() {
   document.querySelectorAll(".note").forEach(note => {
-    note.addEventListener("dragstart", e => dragged = e.target);
-    note.addEventListener("touchstart", e => dragged = e.target);
+    note.addEventListener("dragstart", e => {
+      dragged = e.target;
+      if (e.dataTransfer) {
+        const img = new Image();
+        img.src = "";
+        e.dataTransfer.setDragImage(img, 0, 0);
+      }
+    });
+
+    note.addEventListener("touchstart", () => {
+      dragged = note;
+    });
   });
 
   document.querySelectorAll(".slot").forEach(slot => {
@@ -175,7 +189,7 @@ function enableDrag() {
       playNoteSound();
     });
 
-    slot.addEventListener("touchend", e => {
+    slot.addEventListener("touchend", () => {
       if (dragged) {
         slot.innerHTML = "";
         slot.appendChild(dragged);
@@ -261,7 +275,7 @@ document.getElementById("saveSettings").addEventListener("click", () => {
 });
 
 // ======================
-// LOGICA LIVELLI
+// LIVELLI
 // ======================
 
 function getCurrentLevel() {
@@ -277,10 +291,6 @@ function advanceLevelIfNeeded() {
     resultEl.textContent = `Bravo! Sei passato al livello ${gameState.currentLevel}.`;
   }
 }
-
-// ======================
-// SCELTA TONICA E TIPO PER LIVELLO
-// ======================
 
 function chooseTonicAndTypeForLevel(level) {
   if (level === 1) {
@@ -304,7 +314,7 @@ function chooseTonicAndTypeForLevel(level) {
 }
 
 // ======================
-// GENERAZIONE ESERCIZIO STANDARD
+// NUOVO ESERCIZIO
 // ======================
 
 function newExercise() {
@@ -457,6 +467,48 @@ document.getElementById("startTrainingExercise").addEventListener("click", () =>
 });
 
 // ======================
+// MODALITÀ CLASSE
+// ======================
+
+openClassModeBtn.addEventListener("click", () => {
+  classPanel.style.display = "block";
+  classOverlay.style.display = "block";
+  classStudentsInput.value = classStudents.join("\n");
+});
+
+closeClassPanelBtn.addEventListener("click", () => {
+  classPanel.style.display = "none";
+  classOverlay.style.display = "none";
+});
+
+classOverlay.addEventListener("click", () => {
+  classPanel.style.display = "none";
+  classOverlay.style.display = "none";
+});
+
+saveClassStudentsBtn.addEventListener("click", () => {
+  const lines = classStudentsInput.value
+    .split("\n")
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+
+  classStudents = lines;
+
+  currentStudentSelect.innerHTML = '<option value="">(singolo giocatore)</option>';
+  classStudents.forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    currentStudentSelect.appendChild(opt);
+  });
+
+  classModeEnabled = classStudents.length > 0;
+
+  classPanel.style.display = "none";
+  classOverlay.style.display = "none";
+});
+
+// ======================
 // VERIFICA
 // ======================
 
@@ -470,7 +522,7 @@ document.getElementById("check").addEventListener("click", () => {
   let userScale = [];
 
   slots.forEach(slot => {
-    userScale.push(slot.textContent.trim());
+    userScale.push(slot.textContent.trim() || "");
   });
 
   if (userScale.includes("") || userScale.length !== 7) {
@@ -519,14 +571,8 @@ document.getElementById("check").addEventListener("click", () => {
   const deltaScore = gameState.score - prevScore;
   scoreEl.textContent = gameState.score;
 
+  // DISTANZE REALI
   let stepLines = [];
   let abstractPattern = [];
 
-  for (let i = 0; i < userScale.length; i++) {
-    const note1 = userScale[i];
-    const note2 = userScale[(i + 1) % 7];
-
-    const idx1 = semitones.indexOf(note1);
-    const idx2 = semitones.indexOf(note2);
-
-    let dist
+  for (let i = 
