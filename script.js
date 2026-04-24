@@ -413,7 +413,7 @@ document.getElementById("startTrainingExercise").addEventListener("click", () =>
 });
 
 // ======================
-// DRAG & DROP TOUCH + DESKTOP (VERSIONE STABILE SENZA CLONI)
+// DRAG & DROP TOUCH + DESKTOP (SENZA CLONI)
 // ======================
 
 function enableDrag() {
@@ -551,7 +551,6 @@ document.getElementById("check").addEventListener("click", () => {
     abstractPattern.push(dist === 1 ? "S" : dist === 2 ? "T" : dist + "s");
   }
 
-  intervalsEl.textContent =
   intervalsEl.textContent = stepLines.join(" | ");
   abstractEl.textContent = abstractPattern.join("-");
 
@@ -581,6 +580,7 @@ document.getElementById("check").addEventListener("click", () => {
     setTimeout(() => nextGameExercise(), 900);
   }
 });
+
 // ======================
 // TIMEOUT HANDLER
 // ======================
@@ -626,6 +626,7 @@ document.getElementById("closeResults").addEventListener("click", () => {
   resultsPanel.classList.remove("open");
   resultsOverlay.style.display = "none";
 });
+
 // ======================
 // CSV EXPORT
 // ======================
@@ -693,6 +694,7 @@ downloadClassExcelBtn.addEventListener("click", () => {
 
   URL.revokeObjectURL(url);
 });
+
 // ======================
 // MODALITÀ CLASSE
 // ======================
@@ -758,4 +760,3 @@ function init() {
 }
 
 init();
-
