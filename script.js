@@ -552,3 +552,210 @@ document.getElementById("check").addEventListener("click", () => {
   }
 
   intervalsEl.textContent =
+  intervalsEl.textContent = stepLines.join(" | ");
+  abstractEl.textContent = abstractPattern.join("-");
+
+  if (gameState.gameMode) {
+    gameHistory.push({
+      player: gameState.playerName,
+      tonic: correctScale[0],
+      correct: correct,
+      scoreDelta: deltaScore,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  if (classModeEnabled) {
+    classRegister.push({
+      student: gameState.playerName || "Anonimo",
+      tonic: correctScale[0],
+      correct,
+      score: gameState.score,
+      time: new Date().toISOString()
+    });
+  }
+
+  exerciseActive = false;
+
+  if (gameState.gameMode) {
+    setTimeout(() => nextGameExercise(), 900);
+  }
+});
+// ======================
+// TIMEOUT HANDLER
+// ======================
+
+function handleTimeout() {
+  exerciseActive = false;
+  gameState.score += gameState.scoreTimeout;
+  scoreEl.textContent = gameState.score;
+  resultEl.textContent = "Tempo scaduto!";
+  if (gameState.gameMode) {
+    setTimeout(() => nextGameExercise(), 900);
+  }
+}
+
+// ======================
+// RISULTATI GAME
+// ======================
+
+function showGameResults() {
+  resultsTitle.textContent = `Risultati di ${gameState.playerName}`;
+  resultsContent.innerHTML = "";
+
+  const summary = document.createElement("div");
+  summary.classList.add("resultBox");
+  summary.innerHTML = `
+    <strong>Punteggio finale:</strong> ${gameState.score}<br>
+    <strong>Corrette:</strong> ${gameState.gameCorrect} / ${gameState.gameTotal}
+  `;
+  resultsContent.appendChild(summary);
+
+  gameHistory.forEach(h => {
+    const box = document.createElement("div");
+    box.classList.add("resultBox", h.correct ? "correct" : "wrong");
+    box.textContent = `${h.timestamp} — ${h.player} — ${h.tonic} — ${h.correct ? "OK" : "ERR"} — ${h.scoreDelta}`;
+    resultsContent.appendChild(box);
+  });
+
+  resultsPanel.classList.add("open");
+  resultsOverlay.style.display = "block";
+}
+
+document.getElementById("closeResults").addEventListener("click", () => {
+  resultsPanel.classList.remove("open");
+  resultsOverlay.style.display = "none";
+});
+// ======================
+// CSV EXPORT
+// ======================
+
+function toCSV(rows) {
+  return rows
+    .map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+    .join("\n");
+}
+
+downloadExcelBtn.addEventListener("click", () => {
+  if (!gameHistory.length) {
+    alert("Nessun risultato da scaricare.");
+    return;
+  }
+
+  const csv =
+    "player,tonic,correct,scoreDelta,timestamp\n" +
+    toCSV(
+      gameHistory.map(h => [
+        h.player,
+        h.tonic,
+        h.correct,
+        h.scoreDelta,
+        h.timestamp
+      ])
+    );
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ruota_scales_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+});
+
+downloadClassExcelBtn.addEventListener("click", () => {
+  if (!classRegister.length) {
+    alert("Registro classe vuoto.");
+    return;
+  }
+
+  const csv =
+    "student,tonic,correct,score,time\n" +
+    toCSV(
+      classRegister.map(r => [
+        r.student,
+        r.tonic,
+        r.correct,
+        r.score,
+        r.time
+      ])
+    );
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `registro_classe_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+});
+// ======================
+// MODALITÀ CLASSE
+// ======================
+
+openClassModeBtn.addEventListener("click", () => {
+  classPanel.style.display = "block";
+  classOverlay.style.display = "block";
+});
+
+closeClassPanelBtn.addEventListener("click", () => {
+  classPanel.style.display = "none";
+  classOverlay.style.display = "none";
+});
+
+classOverlay.addEventListener("click", () => {
+  classPanel.style.display = "none";
+  classOverlay.style.display = "none";
+});
+
+saveClassStudentsBtn.addEventListener("click", () => {
+  const lines = classStudentsInput.value
+    .split("\n")
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  classStudents = lines;
+
+  currentStudentSelect.innerHTML = '<option value="">(singolo giocatore)</option>';
+
+  classStudents.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = s;
+    currentStudentSelect.appendChild(opt);
+  });
+
+  classModeEnabled = classStudents.length > 0;
+
+  classPanel.style.display = "none";
+  classOverlay.style.display = "none";
+});
+
+// ======================
+// TEMA
+// ======================
+
+toggleThemeBtn.addEventListener("click", () => {
+  document.body.classList.toggle("dark-theme");
+  currentTheme = document.body.classList.contains("dark-theme") ? "dark" : "light";
+  localStorage.setItem("ruota-theme", currentTheme);
+});
+
+// ======================
+// INIZIALIZZAZIONE
+// ======================
+
+function init() {
+  createSlots();
+  createNotes();
+  levelEl.textContent = gameState.currentLevel;
+  scoreEl.textContent = gameState.score;
+  manualLevelBox.style.display = (gameState.mode === "B") ? "block" : "none";
+}
+
+init();
+
