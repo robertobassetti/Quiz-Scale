@@ -430,6 +430,29 @@ function enableDrag() {
   let draggedEl = null;
   let cloneEl = null;
 
+  // Disabilita lo scroll durante il drag (Safari otherwise duplicates)
+  function disableScroll() {
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+  }
+
+  function enableScroll() {
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+  }
+
+  function cleanupClone() {
+    if (cloneEl) cloneEl.remove();
+    cloneEl = null;
+    draggedEl = null;
+    enableScroll();
+  }
+
+  // Se Safari perde il focus → rimuovi clone
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) cleanupClone();
+  });
+
   notes.forEach(note => {
 
     // --- DESKTOP DRAG ---
@@ -440,7 +463,8 @@ function enableDrag() {
     // --- TOUCH START ---
     note.addEventListener("touchstart", e => {
       e.preventDefault();
-      removeTouchClone(); // sicurezza
+      cleanupClone();
+      disableScroll();
 
       draggedEl = e.target;
 
@@ -465,7 +489,7 @@ function enableDrag() {
       cloneEl.style.top = e.touches[0].clientY + "px";
     });
 
-    // --- TOUCH END (DROP) ---
+    // --- TOUCH END ---
     note.addEventListener("touchend", e => {
       if (!cloneEl) return;
 
@@ -478,18 +502,29 @@ function enableDrag() {
         playNoteSound();
       }
 
-      cloneEl.remove();
-      cloneEl = null;
-      draggedEl = null;
+      cleanupClone();
     });
 
-    // --- TOUCH CANCEL (fondamentale su iPad) ---
-    note.addEventListener("touchcancel", () => {
-      if (cloneEl) cloneEl.remove();
-      cloneEl = null;
+    // --- TOUCH CANCEL (Safari lo usa spesso) ---
+    note.addEventListener("touchcancel", cleanupClone);
+
+    // --- POINTER CANCEL (iPadOS 17+) ---
+    note.addEventListener("pointercancel", cleanupClone);
+  });
+
+  // --- DESKTOP DROP ---
+  slots.forEach(slot => {
+    slot.addEventListener("dragover", e => e.preventDefault());
+    slot.addEventListener("drop", e => {
+      e.preventDefault();
+      if (!draggedEl) return;
+      slot.innerHTML = "";
+      slot.appendChild(draggedEl);
+      playNoteSound();
       draggedEl = null;
     });
   });
+}
 
   // --- DESKTOP DROP ---
   slots.forEach(slot => {
