@@ -2,20 +2,16 @@
 // CONFIGURAZIONE BASE
 // ======================
 
-// Note cromatiche
 const semitones = ["Do", "Do#", "Re", "Re#", "Mi", "Fa", "Fa#", "Sol", "Sol#", "La", "La#", "Si"];
 
-// Pattern scale (solo maggiori e minori naturali)
 const patterns = {
   major:    [2,2,1,2,2,2,1],
   minorNat: [2,1,2,2,1,2,2]
 };
 
-// Scale “facili”
 const majorEasyTonics = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
 const minorEasyTonics = ["La", "Si", "Do#", "Re", "Mi", "Fa#", "Sol#"];
 
-// Stato del gioco
 let gameState = {
   mode: "A",
   currentLevel: 1,
@@ -109,7 +105,7 @@ const closeClassPanelBtn = document.getElementById("closeClassPanel");
 const currentStudentSelect = document.getElementById("currentStudentSelect");
 
 // ======================
-// CERCHI E NOTE
+// CERCHIO E NOTE
 // ======================
 
 const numSlots = 7;
@@ -146,44 +142,6 @@ function createNotes() {
   enableDrag();
 }
 
-let dragged = null;
-
-function playNoteSound() {
-  if (!noteSound) return;
-  try {
-    noteSound.currentTime = 0;
-    noteSound.play();
-  } catch (e) {}
-}
-
-function enableDrag() {
-  document.querySelectorAll(".note").forEach(note => {
-    note.addEventListener("dragstart", e => dragged = e.target);
-    note.addEventListener("touchstart", e => dragged = e.target);
-  });
-
-  document.querySelectorAll(".slot").forEach(slot => {
-    slot.addEventListener("dragover", e => e.preventDefault());
-    slot.addEventListener("drop", e => {
-      e.preventDefault();
-      if (!dragged) return;
-      slot.innerHTML = "";
-      slot.appendChild(dragged);
-      dragged = null;
-      playNoteSound();
-    });
-
-    slot.addEventListener("touchend", e => {
-      if (dragged) {
-        slot.innerHTML = "";
-        slot.appendChild(dragged);
-        dragged = null;
-        playNoteSound();
-      }
-    });
-  });
-}
-
 // ======================
 // TIMER
 // ======================
@@ -213,7 +171,6 @@ function clearTimer() {
     timerId = null;
   }
 }
-
 // ======================
 // IMPOSTAZIONI
 // ======================
@@ -221,22 +178,16 @@ function clearTimer() {
 document.getElementById("openSettings").addEventListener("click", () => {
   settingsPanel.classList.add("open");
   overlay.style.display = "block";
-  settingsPanel.setAttribute('aria-hidden','false');
-  overlay.setAttribute('aria-hidden','false');
 });
 
 document.getElementById("closeSettings").addEventListener("click", () => {
   settingsPanel.classList.remove("open");
   overlay.style.display = "none";
-  settingsPanel.setAttribute('aria-hidden','true');
-  overlay.setAttribute('aria-hidden','true');
 });
 
 overlay.addEventListener("click", () => {
   settingsPanel.classList.remove("open");
   overlay.style.display = "none";
-  settingsPanel.setAttribute('aria-hidden','true');
-  overlay.setAttribute('aria-hidden','true');
 });
 
 document.getElementById("saveSettings").addEventListener("click", () => {
@@ -459,6 +410,79 @@ document.getElementById("startTrainingExercise").addEventListener("click", () =>
 
   startTimer();
 });
+// ======================
+// TOUCH + DESKTOP DRAG & DROP
+// ======================
+
+function enableDrag() {
+  const notes = document.querySelectorAll(".note");
+  const slots = document.querySelectorAll(".slot");
+
+  let draggedEl = null;
+  let cloneEl = null;
+
+  notes.forEach(note => {
+
+    // --- DESKTOP DRAG ---
+    note.addEventListener("dragstart", e => {
+      draggedEl = e.target;
+    });
+
+    // --- TOUCH START ---
+    note.addEventListener("touchstart", e => {
+      e.preventDefault();
+      draggedEl = e.target;
+
+      cloneEl = draggedEl.cloneNode(true);
+      cloneEl.style.position = "fixed";
+      cloneEl.style.pointerEvents = "none";
+      cloneEl.style.opacity = "0.8";
+      cloneEl.style.zIndex = "9999";
+      cloneEl.style.left = e.touches[0].clientX + "px";
+      cloneEl.style.top = e.touches[0].clientY + "px";
+      document.body.appendChild(cloneEl);
+    });
+
+    // --- TOUCH MOVE ---
+    note.addEventListener("touchmove", e => {
+      if (!cloneEl) return;
+      e.preventDefault();
+      cloneEl.style.left = e.touches[0].clientX + "px";
+      cloneEl.style.top = e.touches[0].clientY + "px";
+    });
+
+    // --- TOUCH END (DROP) ---
+    note.addEventListener("touchend", e => {
+      if (!cloneEl) return;
+
+      const touch = e.changedTouches[0];
+      const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+
+      if (dropTarget && dropTarget.classList.contains("slot")) {
+        dropTarget.innerHTML = "";
+        dropTarget.appendChild(draggedEl);
+        playNoteSound();
+      }
+
+      cloneEl.remove();
+      cloneEl = null;
+      draggedEl = null;
+    });
+  });
+
+  // --- DESKTOP DROP ---
+  slots.forEach(slot => {
+    slot.addEventListener("dragover", e => e.preventDefault());
+    slot.addEventListener("drop", e => {
+      e.preventDefault();
+      if (!draggedEl) return;
+      slot.innerHTML = "";
+      slot.appendChild(draggedEl);
+      playNoteSound();
+      draggedEl = null;
+    });
+  });
+}
 
 // ======================
 // VERIFICA
@@ -523,7 +547,6 @@ document.getElementById("check").addEventListener("click", () => {
   const deltaScore = gameState.score - prevScore;
   scoreEl.textContent = gameState.score;
 
-  // Calcolo intervalli e pattern astratto
   let stepLines = [];
   let abstractPattern = [];
 
@@ -542,7 +565,6 @@ document.getElementById("check").addEventListener("click", () => {
   intervalsEl.textContent = stepLines.join(' | ');
   abstractEl.textContent = abstractPattern.join('-');
 
-  // Salvataggio storico per Game e registro classe
   if (gameState.gameMode) {
     gameHistory.push({
       player: gameState.playerName,
@@ -565,7 +587,6 @@ document.getElementById("check").addEventListener("click", () => {
 
   exerciseActive = false;
 
-  // Se siamo in Game, procedi al prossimo esercizio dopo breve pausa
   if (gameState.gameMode) {
     setTimeout(() => nextGameExercise(), 900);
   }
@@ -599,7 +620,6 @@ function showGameResults() {
                        <strong>Corrette:</strong> ${gameState.gameCorrect} / ${gameState.gameTotal}`;
   resultsContent.appendChild(summary);
 
-  // Lista dettagliata
   gameHistory.forEach(h => {
     const box = document.createElement('div');
     box.classList.add('resultBox', h.correct ? 'correct' : 'wrong');
@@ -609,18 +629,17 @@ function showGameResults() {
 
   resultsPanel.classList.add('open');
   resultsOverlay.style.display = 'block';
-  resultsPanel.setAttribute('aria-hidden','false');
-  resultsOverlay.setAttribute('aria-hidden','false');
 }
 
 document.getElementById('closeResults').addEventListener('click', () => {
   resultsPanel.classList.remove('open');
   resultsOverlay.style.display = 'none';
-  resultsPanel.setAttribute('aria-hidden','true');
-  resultsOverlay.setAttribute('aria-hidden','true');
 });
 
-// Export CSV helpers (simple)
+// ======================
+// CSV EXPORT
+// ======================
+
 function toCSV(rows) {
   return rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
 }
@@ -671,7 +690,7 @@ classOverlay.addEventListener('click', () => {
 saveClassStudentsBtn.addEventListener('click', () => {
   const lines = classStudentsInput.value.split('\n').map(l => l.trim()).filter(Boolean);
   classStudents = lines;
-  // populate select
+
   currentStudentSelect.innerHTML = '<option value="">(singolo giocatore)</option>';
   classStudents.forEach(s => {
     const opt = document.createElement('option');
@@ -679,6 +698,7 @@ saveClassStudentsBtn.addEventListener('click', () => {
     opt.textContent = s;
     currentStudentSelect.appendChild(opt);
   });
+
   classModeEnabled = classStudents.length > 0;
   classPanel.style.display = 'none';
   classOverlay.style.display = 'none';
@@ -703,7 +723,6 @@ function init() {
   createNotes();
   levelEl.textContent = gameState.currentLevel;
   scoreEl.textContent = gameState.score;
-  // manual level box visibility
   manualLevelBox.style.display = (gameState.mode === 'B') ? 'block' : 'none';
 }
 
