@@ -17,38 +17,36 @@ const minorEasyTonics = ["La", "Si", "Do#", "Re", "Mi", "Fa#", "Sol#"];
 
 // Stato del gioco
 let gameState = {
-  mode: "A",              // "A" = progressione automatica, "B" = scelta manuale
-  currentLevel: 1,        // livello attuale (1–3)
-  manualLevel: 1,         // livello scelto in modalità B
-  timePerExercise: 30,    // secondi
+  mode: "A",
+  currentLevel: 1,
+  manualLevel: 1,
+  timePerExercise: 30,
   score: 0,
-  correctInLevel: 0,      // risposte corrette nel livello corrente (per progressione)
+  correctInLevel: 0,
   scoreCorrect: 10,
   scoreFast: 5,
   scoreWrong: -5,
   scoreTimeout: -10,
-  gameMode: false,        // modalità Game attiva?
-  gameRemaining: 0,       // esercizi rimanenti
-  gameTotal: 0,           // totale esercizi
-  gameCorrect: 0,         // risposte corrette in modalità Game
-  playerName: "",         // nome giocatore modalità Game
-  trainingMode: false     // modalità Allenamento attiva?
+  gameMode: false,
+  gameRemaining: 0,
+  gameTotal: 0,
+  gameCorrect: 0,
+  playerName: "",
+  trainingMode: false
 };
 
-// Modalità classe
 let classModeEnabled = false;
 let classStudents = [];
-let classRegister = []; // registro globale di tutti gli esercizi (classe)
+let classRegister = [];
 
-let correctScale = [];     // scala corretta per l’esercizio corrente
+let correctScale = [];
 let timerId = null;
 let remainingTime = null;
 let exerciseActive = false;
 
-// Tema
-let currentTheme = 'light';
+let currentTheme = localStorage.getItem('ruota-theme') || 'light';
+if (currentTheme === 'dark') document.body.classList.add('dark-theme');
 
-// Archivio esercizi modalità Game
 let gameHistory = [];
 
 // ======================
@@ -223,16 +221,22 @@ function clearTimer() {
 document.getElementById("openSettings").addEventListener("click", () => {
   settingsPanel.classList.add("open");
   overlay.style.display = "block";
+  settingsPanel.setAttribute('aria-hidden','false');
+  overlay.setAttribute('aria-hidden','false');
 });
 
 document.getElementById("closeSettings").addEventListener("click", () => {
   settingsPanel.classList.remove("open");
   overlay.style.display = "none";
+  settingsPanel.setAttribute('aria-hidden','true');
+  overlay.setAttribute('aria-hidden','true');
 });
 
 overlay.addEventListener("click", () => {
   settingsPanel.classList.remove("open");
   overlay.style.display = "none";
+  settingsPanel.setAttribute('aria-hidden','true');
+  overlay.setAttribute('aria-hidden','true');
 });
 
 document.getElementById("saveSettings").addEventListener("click", () => {
@@ -519,6 +523,7 @@ document.getElementById("check").addEventListener("click", () => {
   const deltaScore = gameState.score - prevScore;
   scoreEl.textContent = gameState.score;
 
+  // Calcolo intervalli e pattern astratto
   let stepLines = [];
   let abstractPattern = [];
 
@@ -529,4 +534,177 @@ document.getElementById("check").addEventListener("click", () => {
     const idx1 = semitones.indexOf(note1);
     const idx2 = semitones.indexOf(note2);
 
-    let dist
+    let dist = (idx2 - idx1 + 12) % 12;
+    stepLines.push(`${note1} → ${note2}: ${dist} semitoni`);
+    abstractPattern.push(dist === 1 ? 'S' : dist === 2 ? 'T' : dist + 's');
+  }
+
+  intervalsEl.textContent = stepLines.join(' | ');
+  abstractEl.textContent = abstractPattern.join('-');
+
+  // Salvataggio storico per Game e registro classe
+  if (gameState.gameMode) {
+    gameHistory.push({
+      player: gameState.playerName,
+      tonic: correctScale[0],
+      correct: correct,
+      scoreDelta: deltaScore,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  if (classModeEnabled) {
+    classRegister.push({
+      student: gameState.playerName || 'Anonimo',
+      tonic: correctScale[0],
+      correct,
+      score: gameState.score,
+      time: new Date().toISOString()
+    });
+  }
+
+  exerciseActive = false;
+
+  // Se siamo in Game, procedi al prossimo esercizio dopo breve pausa
+  if (gameState.gameMode) {
+    setTimeout(() => nextGameExercise(), 900);
+  }
+});
+
+// ======================
+// TIMEOUT HANDLER
+// ======================
+
+function handleTimeout() {
+  exerciseActive = false;
+  gameState.score += gameState.scoreTimeout;
+  scoreEl.textContent = gameState.score;
+  resultEl.textContent = "Tempo scaduto!";
+  if (gameState.gameMode) {
+    setTimeout(() => nextGameExercise(), 900);
+  }
+}
+
+// ======================
+// RISULTATI GAME / EXPORT
+// ======================
+
+function showGameResults() {
+  resultsTitle.textContent = `Risultati di ${gameState.playerName}`;
+  resultsContent.innerHTML = '';
+
+  const summary = document.createElement('div');
+  summary.classList.add('resultBox');
+  summary.innerHTML = `<strong>Punteggio finale:</strong> ${gameState.score}<br>
+                       <strong>Corrette:</strong> ${gameState.gameCorrect} / ${gameState.gameTotal}`;
+  resultsContent.appendChild(summary);
+
+  // Lista dettagliata
+  gameHistory.forEach(h => {
+    const box = document.createElement('div');
+    box.classList.add('resultBox', h.correct ? 'correct' : 'wrong');
+    box.textContent = `${h.timestamp} — ${h.player} — ${h.tonic} — ${h.correct ? 'OK' : 'ERR'} — ${h.scoreDelta}`;
+    resultsContent.appendChild(box);
+  });
+
+  resultsPanel.classList.add('open');
+  resultsOverlay.style.display = 'block';
+  resultsPanel.setAttribute('aria-hidden','false');
+  resultsOverlay.setAttribute('aria-hidden','false');
+}
+
+document.getElementById('closeResults').addEventListener('click', () => {
+  resultsPanel.classList.remove('open');
+  resultsOverlay.style.display = 'none';
+  resultsPanel.setAttribute('aria-hidden','true');
+  resultsOverlay.setAttribute('aria-hidden','true');
+});
+
+// Export CSV helpers (simple)
+function toCSV(rows) {
+  return rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+}
+
+downloadExcelBtn.addEventListener('click', () => {
+  if (!gameHistory.length) return alert('Nessun risultato da scaricare.');
+  const csv = 'player,tonic,correct,scoreDelta,timestamp\n' + toCSV(gameHistory.map(h => [h.player, h.tonic, h.correct, h.scoreDelta, h.timestamp]));
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ruota_scales_${(new Date()).toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+downloadClassExcelBtn.addEventListener('click', () => {
+  if (!classRegister.length) return alert('Registro classe vuoto.');
+  const csv = 'student,tonic,correct,score,time\n' + toCSV(classRegister.map(r => [r.student, r.tonic, r.correct, r.score, r.time]));
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `registro_classe_${(new Date()).toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ======================
+// MODALITÀ CLASSE
+// ======================
+
+openClassModeBtn.addEventListener('click', () => {
+  classPanel.style.display = 'block';
+  classOverlay.style.display = 'block';
+});
+
+closeClassPanelBtn.addEventListener('click', () => {
+  classPanel.style.display = 'none';
+  classOverlay.style.display = 'none';
+});
+
+classOverlay.addEventListener('click', () => {
+  classPanel.style.display = 'none';
+  classOverlay.style.display = 'none';
+});
+
+saveClassStudentsBtn.addEventListener('click', () => {
+  const lines = classStudentsInput.value.split('\n').map(l => l.trim()).filter(Boolean);
+  classStudents = lines;
+  // populate select
+  currentStudentSelect.innerHTML = '<option value="">(singolo giocatore)</option>';
+  classStudents.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    currentStudentSelect.appendChild(opt);
+  });
+  classModeEnabled = classStudents.length > 0;
+  classPanel.style.display = 'none';
+  classOverlay.style.display = 'none';
+});
+
+// ======================
+// TEMA
+// ======================
+
+toggleThemeBtn.addEventListener('click', () => {
+  document.body.classList.toggle('dark-theme');
+  currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+  localStorage.setItem('ruota-theme', currentTheme);
+});
+
+// ======================
+// INIZIALIZZAZIONE
+// ======================
+
+function init() {
+  createSlots();
+  createNotes();
+  levelEl.textContent = gameState.currentLevel;
+  scoreEl.textContent = gameState.score;
+  // manual level box visibility
+  manualLevelBox.style.display = (gameState.mode === 'B') ? 'block' : 'none';
+}
+
+init();

@@ -1,28 +1,78 @@
 {
   "name": "Ruota delle Scale - Quiz",
-  "short_name": "ScaleQuiz",
-  "start_url": "index.html",
+  "short_name": "RuotaScale",
+  "description": "Esercizi interattivi per imparare a costruire le scale maggiori e minori.",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
-  "orientation": "portrait",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/apple-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/apple-167.png",
+      "sizes": "167x167",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icons/apple-180.png",
       "sizes": "180x180",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icons/splash-portrait.png",
+      "sizes": "1170x2532",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/splash-landscape.png",
+      "sizes": "2532x1170",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/favicon-light.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuovo esercizio",
+      "short_name": "Nuovo",
+      "description": "Avvia un nuovo esercizio",
+      "url": "/index.html#new",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Modalità Allenamento",
+      "short_name": "Allenamento",
+      "description": "Apri la modalità allenamento",
+      "url": "/index.html#training",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
     }
   ]
 }

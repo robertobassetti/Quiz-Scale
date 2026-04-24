@@ -1,153 +1,180 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<title>Ruota delle Scale - Quiz</title>
+  <meta charset="UTF-8">
+  <title>Ruota delle Scale - Quiz</title>
 
-<!-- PWA -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#4CAF50">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png">
+  <!-- PWA -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4CAF50">
 
-<link rel="stylesheet" href="style.css">
+  <!-- Manifest and icons -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon-light.ico" type="image/x-icon">
+
+  <!-- Apple / splash -->
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <!-- Splash screens -->
+  <link rel="apple-touch-startup-image" href="icons/splash-portrait.png" media="(orientation: portrait)">
+  <link rel="apple-touch-startup-image" href="icons/splash-landscape.png" media="(orientation: landscape)">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>La Ruota delle Scale – Quiz</h1>
+  <h1>La Ruota delle Scale – Quiz</h1>
 
-<button id="openSettings">Impostazioni ⚙️</button>
-<button id="newExercise">Nuovo esercizio</button>
-<button id="startGame">Modalità Game 🎮</button>
-<button id="openTraining">Modalità Allenamento 🎯</button>
-<button id="openClassMode">Modalità Classe 🧑‍🏫</button>
-<button id="toggleTheme">Tema chiaro/scuro 🌓</button>
-
-<div id="scoreboard">
-  <span>Punteggio: <strong id="score">0</strong></span>
-  <span>Livello: <strong id="level">1</strong></span>
-  <span>Tempo: <strong id="timer">--</strong></span>
-  <span>Studente:
-    <select id="currentStudentSelect">
-      <option value="">(singolo giocatore)</option>
-    </select>
-  </span>
-</div>
-
-<!-- PANNELLO IMPOSTAZIONI -->
-<div id="settingsPanel">
-  <h2>Impostazioni</h2>
-
-  <h3>Modalità di gioco</h3>
-  <label><input type="radio" name="mode" value="A" checked> A — Progressione automatica</label><br>
-  <label><input type="radio" name="mode" value="B"> B — Scelta manuale del livello</label>
-
-  <h3>Tempo per esercizio</h3>
-  <input type="number" id="timeInput" min="0" max="300" value="30">
-
-  <h3>Punteggi</h3>
-  <label>Punteggio risposta corretta:</label>
-  <input type="number" id="scoreCorrect" value="10"><br>
-
-  <label>Bonus risposta veloce:</label>
-  <input type="number" id="scoreFast" value="5"><br>
-
-  <label>Penalità risposta errata:</label>
-  <input type="number" id="scoreWrong" value="-5"><br>
-
-  <label>Penalità tempo scaduto:</label>
-  <input type="number" id="scoreTimeout" value="-10"><br>
-
-  <div id="manualLevelBox">
-    <h3>Livello (solo modalità B)</h3>
-    <select id="manualLevel">
-      <option value="1">1 — Scale facili</option>
-      <option value="2">2 — Misto completo</option>
-      <option value="3">3 — Intervallo mancante</option>
-    </select>
+  <div class="top-controls">
+    <button id="openSettings">Impostazioni ⚙️</button>
+    <button id="newExercise">Nuovo esercizio</button>
+    <button id="startGame">Modalità Game 🎮</button>
+    <button id="openTraining">Modalità Allenamento 🎯</button>
+    <button id="openClassMode">Modalità Classe 🧑‍🏫</button>
+    <button id="toggleTheme">Tema chiaro/scuro 🌓</button>
   </div>
 
-  <h3>Modalità Game</h3>
-  <label>Numero esercizi:</label>
-  <input type="number" id="gameCount" min="1" max="100" value="10">
+  <div id="scoreboard">
+    <span>Punteggio: <strong id="score">0</strong></span>
+    <span>Livello: <strong id="level">1</strong></span>
+    <span>Tempo: <strong id="timer">--</strong></span>
+    <span>Studente:
+      <select id="currentStudentSelect">
+        <option value="">(singolo giocatore)</option>
+      </select>
+    </span>
+  </div>
 
-  <button id="saveSettings">Salva impostazioni</button>
-  <button id="closeSettings">Chiudi</button>
-</div>
+  <!-- PANNELLO IMPOSTAZIONI -->
+  <div id="settingsPanel" aria-hidden="true">
+    <h2>Impostazioni</h2>
 
-<div id="overlay"></div>
+    <h3>Modalità di gioco</h3>
+    <label><input type="radio" name="mode" value="A" checked> A — Progressione automatica</label><br>
+    <label><input type="radio" name="mode" value="B"> B — Scelta manuale del livello</label>
 
-<!-- PANNELLO RISULTATI -->
-<div id="gameResultsPanel">
-  <h2 id="resultsTitle">Risultati</h2>
-  <div id="gameResultsContent"></div>
+    <h3>Tempo per esercizio</h3>
+    <input type="number" id="timeInput" min="0" max="300" value="30">
 
-  <button id="downloadExcel">Scarica Excel (giocatore)</button>
-  <button id="downloadClassExcel">Scarica registro classe</button>
-  <button id="closeResults">Chiudi</button>
-</div>
+    <h3>Punteggi</h3>
+    <label>Punteggio risposta corretta:</label>
+    <input type="number" id="scoreCorrect" value="10"><br>
 
-<div id="resultsOverlay"></div>
+    <label>Bonus risposta veloce:</label>
+    <input type="number" id="scoreFast" value="5"><br>
 
-<!-- PANNELLO ALLENAMENTO -->
-<div id="trainingPanel">
-  <h2>Modalità Allenamento</h2>
+    <label>Penalità risposta errata:</label>
+    <input type="number" id="scoreWrong" value="-5"><br>
 
-  <label>Tonalità:</label>
-  <select id="trainingTonic"></select>
+    <label>Penalità tempo scaduto:</label>
+    <input type="number" id="scoreTimeout" value="-10"><br>
 
-  <label>Modo:</label>
-  <select id="trainingMode">
-    <option value="major">Maggiore</option>
-    <option value="minorNat">Minore naturale</option>
-  </select>
+    <div id="manualLevelBox">
+      <h3>Livello (solo modalità B)</h3>
+      <select id="manualLevel">
+        <option value="1">1 — Scale facili</option>
+        <option value="2">2 — Misto completo</option>
+        <option value="3">3 — Intervallo mancante</option>
+      </select>
+    </div>
 
-  <button id="startTrainingExercise">Avvia esercizio</button>
-  <button id="closeTraining">Chiudi</button>
-</div>
+    <h3>Modalità Game</h3>
+    <label>Numero esercizi:</label>
+    <input type="number" id="gameCount" min="1" max="100" value="10">
 
-<div id="trainingOverlay"></div>
+    <div class="settings-actions">
+      <button id="saveSettings">Salva impostazioni</button>
+      <button id="closeSettings">Chiudi</button>
+    </div>
+  </div>
 
-<!-- PANNELLO CLASSE -->
-<div id="classPanel">
-  <h2>Modalità Classe</h2>
-  <p>Inserisci un nome per riga:</p>
-  <textarea id="classStudentsInput" rows="8" style="width:100%; font-size:18px;"></textarea>
-  <button id="saveClassStudents">Salva elenco studenti</button>
-  <button id="closeClassPanel">Chiudi</button>
-</div>
+  <div id="overlay" aria-hidden="true"></div>
 
-<div id="classOverlay"></div>
+  <!-- PANNELLO RISULTATI -->
+  <div id="gameResultsPanel" aria-hidden="true">
+    <h2 id="resultsTitle">Risultati</h2>
+    <div id="gameResultsContent"></div>
 
-<!-- CERCHIO SCALE -->
-<div id="circle-container"></div>
+    <div class="results-actions">
+      <button id="downloadExcel">Scarica Excel (giocatore)</button>
+      <button id="downloadClassExcel">Scarica registro classe</button>
+      <button id="closeResults">Chiudi</button>
+    </div>
+  </div>
 
-<h2>Trascina le note:</h2>
-<div id="notes"></div>
+  <div id="resultsOverlay" aria-hidden="true"></div>
 
-<button id="check">Verifica</button>
+  <!-- PANNELLO ALLENAMENTO -->
+  <div id="trainingPanel" aria-hidden="true">
+    <h2>Modalità Allenamento</h2>
 
-<p id="result"></p>
+    <label>Tonalità:</label>
+    <select id="trainingTonic"></select>
 
-<h2>Distanza reale tra note consecutive:</h2>
-<p id="intervals"></p>
+    <label>Modo:</label>
+    <select id="trainingMode">
+      <option value="major">Maggiore</option>
+      <option value="minorNat">Minore naturale</option>
+    </select>
 
-<h2>Struttura astratta della scala:</h2>
-<p id="abstract"></p>
+    <div class="training-actions">
+      <button id="startTrainingExercise">Avvia esercizio</button>
+      <button id="closeTraining">Chiudi</button>
+    </div>
+  </div>
 
-<!-- Suono nota -->
-<audio id="noteSound" src="note-click.mp3" preload="auto"></audio>
+  <div id="trainingOverlay" aria-hidden="true"></div>
 
-<script src="script.js"></script>
+  <!-- PANNELLO CLASSE -->
+  <div id="classPanel" aria-hidden="true">
+    <h2>Modalità Classe</h2>
+    <p>Inserisci un nome per riga:</p>
+    <textarea id="classStudentsInput" rows="8" style="width:100%; font-size:18px;"></textarea>
+    <div class="class-actions">
+      <button id="saveClassStudents">Salva elenco studenti</button>
+      <button id="closeClassPanel">Chiudi</button>
+    </div>
+  </div>
 
-<!-- Registrazione service worker -->
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js');
-  });
-}
-</script>
+  <div id="classOverlay" aria-hidden="true"></div>
+
+  <!-- CERCHIO SCALE -->
+  <div id="circle-container" aria-label="Cerchio delle note"></div>
+
+  <h2>Trascina le note:</h2>
+  <div id="notes" aria-live="polite"></div>
+
+  <div class="check-row">
+    <button id="check">Verifica</button>
+  </div>
+
+  <p id="result" role="status"></p>
+
+  <h2>Distanza reale tra note consecutive:</h2>
+  <p id="intervals"></p>
+
+  <h2>Struttura astratta della scala:</h2>
+  <p id="abstract"></p>
+
+  <!-- Suono nota -->
+  <audio id="noteSound" src="note-click.mp3" preload="auto"></audio>
+
+  <script src="script.js"></script>
+
+  <!-- Registrazione service worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(() => console.log('Service Worker registrato'))
+          .catch(err => console.warn('SW registration failed:', err));
+      });
+    }
+  </script>
 
 </body>
 </html>

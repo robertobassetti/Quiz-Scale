@@ -10,13 +10,18 @@ body {
   background: #ffffff;
   color: #000000;
   transition: background 0.3s, color 0.3s;
+  margin: 0;
+}
+
+.top-controls {
+  margin-bottom: 10px;
 }
 
 button {
-  padding: 15px 30px;
-  font-size: 22px;
-  margin: 10px;
-  border-radius: 15px;
+  padding: 12px 20px;
+  font-size: 18px;
+  margin: 6px;
+  border-radius: 12px;
   border: none;
   background: #4CAF50;
   color: white;
@@ -28,8 +33,12 @@ button:hover {
 }
 
 #scoreboard {
-  margin: 20px;
-  font-size: 24px;
+  margin: 12px;
+  font-size: 18px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 /* ============================
@@ -73,6 +82,7 @@ body.dark-theme .slot {
   transition: right 0.4s ease;
   z-index: 1001;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 #settingsPanel.open {
@@ -106,6 +116,7 @@ body.dark-theme .slot {
   transition: right 0.4s ease;
   z-index: 1002;
   overflow-y: auto;
+  box-sizing: border-box;
 }
 
 #gameResultsPanel.open {
@@ -154,6 +165,7 @@ body.dark-theme .slot {
   padding: 20px;
   z-index: 1003;
   display: none;
+  box-sizing: border-box;
 }
 
 #trainingPanel label {
@@ -195,6 +207,7 @@ body.dark-theme .slot {
   padding: 20px;
   z-index: 1003;
   display: none;
+  box-sizing: border-box;
 }
 
 #classPanel textarea {
@@ -222,7 +235,7 @@ body.dark-theme .slot {
   position: relative;
   width: 550px;
   height: 550px;
-  margin: auto;
+  margin: 18px auto;
 }
 
 .slot {
@@ -236,17 +249,28 @@ body.dark-theme .slot {
   justify-content: center;
   align-items: center;
   font-size: 26px;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
+  box-sizing: border-box;
+}
+
+.slot.correct {
+  background: #90EE90;
+  transform: scale(1.03);
+}
+
+.slot.wrong {
+  background: #FF7F7F;
+  transform: scale(1.03);
 }
 
 .note {
   display: inline-block;
-  padding: 20px 30px;
-  margin: 10px;
+  padding: 14px 20px;
+  margin: 8px;
   background: #87CEFA;
-  border-radius: 15px;
+  border-radius: 12px;
   cursor: grab;
-  font-size: 26px;
+  font-size: 20px;
   user-select: none;
 }
 
@@ -257,14 +281,6 @@ body.dark-theme .slot {
 .fixed-note {
   background: #ddd;
   cursor: default;
-}
-
-.slot.correct {
-  background: #90EE90;
-}
-
-.slot.wrong {
-  background: #FF7F7F;
 }
 
 /* ============================
@@ -284,7 +300,17 @@ body.dark-theme .slot {
   }
 
   .note {
-    padding: 10px 15px;
-    font-size: 20px;
+    padding: 10px 12px;
+    font-size: 16px;
+  }
+
+  #settingsPanel {
+    width: 90%;
+    right: -100%;
+  }
+
+  #gameResultsPanel {
+    width: 90%;
+    right: -100%;
   }
 }
