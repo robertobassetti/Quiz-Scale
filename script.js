@@ -171,6 +171,7 @@ function clearTimer() {
     timerId = null;
   }
 }
+
 // ======================
 // IMPOSTAZIONI
 // ======================
@@ -263,8 +264,6 @@ function chooseTonicAndTypeForLevel(level) {
 // ======================
 
 function newExercise() {
-  removeTouchClone(); // ← patch iPad: elimina eventuali cloni rimasti
-
   gameState.trainingMode = false;
   exerciseActive = true;
   clearTimer();
@@ -287,7 +286,6 @@ function newExercise() {
   let tipoTesto = (type === "major") ? "maggiore" : "minore naturale";
   resultEl.textContent = `Costruisci la scala di ${tonic} ${tipoTesto}`;
 
-  // Livello 3: una nota mancante
   if (level === 3) {
     const slots = document.querySelectorAll(".slot");
     const missingIndex = Math.floor(Math.random() * correctScale.length);
@@ -413,93 +411,22 @@ document.getElementById("startTrainingExercise").addEventListener("click", () =>
 
   startTimer();
 });
-// ======================
-// TOUCH + DESKTOP DRAG & DROP (VERSIONE DEFINITIVA iPad/iPhone/Android)
-// ======================
 
-function removeTouchClone() {
-  const oldClone = document.querySelector(".touch-clone");
-  if (oldClone) oldClone.remove();
-}
+// ======================
+// DRAG & DROP TOUCH + DESKTOP (VERSIONE STABILE SENZA CLONI)
+// ======================
 
 function enableDrag() {
   const notes = document.querySelectorAll(".note");
   const slots = document.querySelectorAll(".slot");
 
   let draggedEl = null;
-  let cloneEl = null;
 
-  function disableScroll() {
-    document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
-  }
-
-  function enableScroll() {
-    document.body.style.overflow = "";
-    document.documentElement.style.overflow = "";
-  }
-
-  function cleanupClone() {
-    if (cloneEl) cloneEl.remove();
-    cloneEl = null;
-    draggedEl = null;
-    enableScroll();
-  }
-
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) cleanupClone();
-  });
-
+  // DESKTOP
   notes.forEach(note => {
-
     note.addEventListener("dragstart", e => {
       draggedEl = e.target;
     });
-
-    note.addEventListener("touchstart", e => {
-      e.preventDefault();
-      cleanupClone();
-      disableScroll();
-
-      draggedEl = e.target;
-
-      cloneEl = draggedEl.cloneNode(true);
-      cloneEl.classList.add("touch-clone");
-      cloneEl.style.position = "fixed";
-      cloneEl.style.pointerEvents = "none";
-      cloneEl.style.opacity = "0.85";
-      cloneEl.style.zIndex = "9999";
-      cloneEl.style.left = e.touches[0].clientX + "px";
-      cloneEl.style.top = e.touches[0].clientY + "px";
-
-      document.body.appendChild(cloneEl);
-    });
-
-    note.addEventListener("touchmove", e => {
-      if (!cloneEl) return;
-      e.preventDefault();
-
-      cloneEl.style.left = e.touches[0].clientX + "px";
-      cloneEl.style.top = e.touches[0].clientY + "px";
-    });
-
-    note.addEventListener("touchend", e => {
-      if (!cloneEl) return;
-
-      const touch = e.changedTouches[0];
-      const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-
-      if (dropTarget && dropTarget.classList.contains("slot")) {
-        dropTarget.innerHTML = "";
-        dropTarget.appendChild(draggedEl);
-        playNoteSound();
-      }
-
-      cleanupClone();
-    });
-
-    note.addEventListener("touchcancel", cleanupClone);
-    note.addEventListener("pointercancel", cleanupClone);
   });
 
   slots.forEach(slot => {
@@ -509,7 +436,38 @@ function enableDrag() {
       if (!draggedEl) return;
       slot.innerHTML = "";
       slot.appendChild(draggedEl);
-      playNoteSound();
+      if (typeof playNoteSound === "function") playNoteSound();
+      draggedEl = null;
+    });
+  });
+
+  // TOUCH
+  notes.forEach(note => {
+    note.addEventListener("touchstart", e => {
+      e.preventDefault();
+      draggedEl = e.target;
+    });
+
+    note.addEventListener("touchmove", e => {
+      e.preventDefault();
+    });
+
+    note.addEventListener("touchend", e => {
+      if (!draggedEl) return;
+
+      const touch = e.changedTouches[0];
+      const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+
+      if (dropTarget && dropTarget.classList.contains("slot")) {
+        dropTarget.innerHTML = "";
+        dropTarget.appendChild(draggedEl);
+        if (typeof playNoteSound === "function") playNoteSound();
+      }
+
+      draggedEl = null;
+    });
+
+    note.addEventListener("touchcancel", () => {
       draggedEl = null;
     });
   });
@@ -553,6 +511,28 @@ document.getElementById("check").addEventListener("click", () => {
 
   const prevScore = gameState.score;
 
+  clearTimer();
+
+  if (correct) {
+    gameState.score += gameState.scoreCorrect;
+
+    if (gameState.timePerExercise > 0 && remainingTime !== null) {
+      const elapsed = gameState.timePerExercise - remainingTime;
+      if (elapsed <= gameState.timePerExercise / 2) {
+        gameState.score += gameState.scoreFast;
+      }
+    }
+
+    gameState.correctInLevel++;
+    if (gameState.gameMode) gameState.gameCorrect++;
+
+    advanceLevelIfNeeded();
+    resultEl.textContent = "Bravo! Scala corretta!";
+  } else {
+    gameState.score += gameState.scoreWrong;
+    resultEl.textContent = "Ci sono errori, riprova.";
+  }
+
   const deltaScore = gameState.score - prevScore;
   scoreEl.textContent = gameState.score;
 
@@ -571,138 +551,4 @@ document.getElementById("check").addEventListener("click", () => {
     abstractPattern.push(dist === 1 ? "S" : dist === 2 ? "T" : dist + "s");
   }
 
-  intervalsEl.textContent = stepLines.join(" | ");
-  abstractEl.textContent = abstractPattern.join("-");
-
-  if (gameState.gameMode) {
-    gameHistory.push({
-      player: gameState.playerName,
-      tonic: correctScale[0],
-      correct: correct,
-      scoreDelta: deltaScore,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  if (classModeEnabled) {
-    classRegister.push({
-      student: gameState.playerName || "Anonimo",
-      tonic: correctScale[0],
-      correct,
-      score: gameState.score,
-      time: new Date().toISOString()
-    });
-  }
-
-  exerciseActive = false;
-
-  if (gameState.gameMode) {
-    setTimeout(() => nextGameExercise(), 900);
-  }
-});
-
-// ======================
-// TIMEOUT HANDLER
-// ======================
-
-function handleTimeout() {
-  exerciseActive = false;
-  gameState.score += gameState.scoreTimeout;
-  scoreEl.textContent = gameState.score;
-  resultEl.textContent = "Tempo scaduto!";
-  if (gameState.gameMode) {
-    setTimeout(() => nextGameExercise(), 900);
-  }
-}
-
-// ======================
-// RISULTATI GAME / EXPORT
-// ======================
-
-function showGameResults() {
-  resultsTitle.textContent = `Risultati di ${gameState.playerName}`;
-  resultsContent.innerHTML = "";
-
-  const summary = document.createElement("div");
-  summary.classList.add("resultBox");
-  summary.innerHTML = `<strong>Punteggio finale:</strong> ${gameState.score}<br>
-                       <strong>Corrette:</strong> ${gameState.gameCorrect} / ${gameState.gameTotal}`;
-  resultsContent.appendChild(summary);
-
-  gameHistory.forEach(h => {
-    const box = document.createElement("div");
-    box.classList.add("resultBox", h.correct ? "correct" : "wrong");
-    box.textContent = `${h.timestamp} — ${h.player} — ${h.tonic} — ${h.correct ? "OK" : "ERR"} — ${h.scoreDelta}`;
-    resultsContent.appendChild(box);
-  });
-
-  resultsPanel.classList.add("open");
-  resultsOverlay.style.display = "block";
-}
-
-document.getElementById("closeResults").addEventListener("click", () => {
-  resultsPanel.classList.remove("open");
-  resultsOverlay.style.display = "none";
-});
-
-// ======================
-// CSV EXPORT
-// ======================
-
-function toCSV(rows) {
-  return rows
-    .map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
-    .join("\n");
-}
-
-downloadExcelBtn.addEventListener("click", () => {
-  if (!gameHistory.length) return alert("Nessun risultato da scaricare.");
-  const csv =
-    "player,tonic,correct,scoreDelta,timestamp\n" +
-    toCSV(gameHistory.map(h => [h.player, h.tonic, h.correct, h.scoreDelta, h.timestamp]));
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `ruota_scales_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-downloadClassExcelBtn.addEventListener("click", () => {
-  if (!classRegister.length) return alert("Registro classe vuoto.");
-  const csv =
-    "student,tonic,correct,score,time\n" +
-    toCSV(classRegister.map(r => [r.student, r.tonic, r.correct, r.score, r.time]));
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `registro_classe_${new Date().toISOString().slice(0, 10)}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-// ======================
-// TEMA
-// ======================
-
-toggleThemeBtn.addEventListener("click", () => {
-  document.body.classList.toggle("dark-theme");
-  currentTheme = document.body.classList.contains("dark-theme") ? "dark" : "light";
-  localStorage.setItem("ruota-theme", currentTheme);
-});
-
-// ======================
-// INIZIALIZZAZIONE
-// ======================
-
-function init() {
-  createSlots();
-  createNotes();
-  levelEl.textContent = gameState.currentLevel;
-  scoreEl.textContent = gameState.score;
-  manualLevelBox.style.display = (gameState.mode === "B") ? "block" : "none";
-}
-
-init();
+  intervalsEl.textContent =
