@@ -414,10 +414,9 @@ document.getElementById("startTrainingExercise").addEventListener("click", () =>
   startTimer();
 });
 // ======================
-// TOUCH + DESKTOP DRAG & DROP (VERSIONE STABILE iPad/iPhone/Android)
+// TOUCH + DESKTOP DRAG & DROP (VERSIONE DEFINITIVA iPad/iPhone/Android)
 // ======================
 
-// Rimuove eventuali cloni rimasti sullo schermo
 function removeTouchClone() {
   const oldClone = document.querySelector(".touch-clone");
   if (oldClone) oldClone.remove();
@@ -430,7 +429,6 @@ function enableDrag() {
   let draggedEl = null;
   let cloneEl = null;
 
-  // Disabilita lo scroll durante il drag (Safari otherwise duplicates)
   function disableScroll() {
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
@@ -448,19 +446,16 @@ function enableDrag() {
     enableScroll();
   }
 
-  // Se Safari perde il focus → rimuovi clone
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) cleanupClone();
   });
 
   notes.forEach(note => {
 
-    // --- DESKTOP DRAG ---
     note.addEventListener("dragstart", e => {
       draggedEl = e.target;
     });
 
-    // --- TOUCH START ---
     note.addEventListener("touchstart", e => {
       e.preventDefault();
       cleanupClone();
@@ -480,7 +475,6 @@ function enableDrag() {
       document.body.appendChild(cloneEl);
     });
 
-    // --- TOUCH MOVE ---
     note.addEventListener("touchmove", e => {
       if (!cloneEl) return;
       e.preventDefault();
@@ -489,7 +483,6 @@ function enableDrag() {
       cloneEl.style.top = e.touches[0].clientY + "px";
     });
 
-    // --- TOUCH END ---
     note.addEventListener("touchend", e => {
       if (!cloneEl) return;
 
@@ -505,28 +498,10 @@ function enableDrag() {
       cleanupClone();
     });
 
-    // --- TOUCH CANCEL (Safari lo usa spesso) ---
     note.addEventListener("touchcancel", cleanupClone);
-
-    // --- POINTER CANCEL (iPadOS 17+) ---
     note.addEventListener("pointercancel", cleanupClone);
   });
 
-  // --- DESKTOP DROP ---
-  slots.forEach(slot => {
-    slot.addEventListener("dragover", e => e.preventDefault());
-    slot.addEventListener("drop", e => {
-      e.preventDefault();
-      if (!draggedEl) return;
-      slot.innerHTML = "";
-      slot.appendChild(draggedEl);
-      playNoteSound();
-      draggedEl = null;
-    });
-  });
-}
-
-  // --- DESKTOP DROP ---
   slots.forEach(slot => {
     slot.addEventListener("dragover", e => e.preventDefault());
     slot.addEventListener("drop", e => {
@@ -577,28 +552,6 @@ document.getElementById("check").addEventListener("click", () => {
   });
 
   const prevScore = gameState.score;
-
-  clearTimer();
-
-  if (correct) {
-    gameState.score += gameState.scoreCorrect;
-
-    if (gameState.timePerExercise > 0 && remainingTime !== null) {
-      const elapsed = gameState.timePerExercise - remainingTime;
-      if (elapsed <= gameState.timePerExercise / 2) {
-        gameState.score += gameState.scoreFast;
-      }
-    }
-
-    gameState.correctInLevel++;
-    if (gameState.gameMode) gameState.gameCorrect++;
-
-    advanceLevelIfNeeded();
-    resultEl.textContent = "Bravo! Scala corretta!";
-  } else {
-    gameState.score += gameState.scoreWrong;
-    resultEl.textContent = "Ci sono errori, riprova.";
-  }
 
   const deltaScore = gameState.score - prevScore;
   scoreEl.textContent = gameState.score;
@@ -728,42 +681,6 @@ downloadClassExcelBtn.addEventListener("click", () => {
   a.download = `registro_classe_${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
-});
-
-// ======================
-// MODALITÀ CLASSE
-// ======================
-
-openClassModeBtn.addEventListener("click", () => {
-  classPanel.style.display = "block";
-  classOverlay.style.display = "block";
-});
-
-closeClassPanelBtn.addEventListener("click", () => {
-  classPanel.style.display = "none";
-  classOverlay.style.display = "none";
-});
-
-classOverlay.addEventListener("click", () => {
-  classPanel.style.display = "none";
-  classOverlay.style.display = "none";
-});
-
-saveClassStudentsBtn.addEventListener("click", () => {
-  const lines = classStudentsInput.value.split("\n").map(l => l.trim()).filter(Boolean);
-  classStudents = lines;
-
-  currentStudentSelect.innerHTML = '<option value="">(singolo giocatore)</option>';
-  classStudents.forEach(s => {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = s;
-    currentStudentSelect.appendChild(opt);
-  });
-
-  classModeEnabled = classStudents.length > 0;
-  classPanel.style.display = "none";
-  classOverlay.style.display = "none";
 });
 
 // ======================
